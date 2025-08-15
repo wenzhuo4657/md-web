@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shell脚本执行测试</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .test-button {
+      margin: 10px 0;
+      padding: 8px 16px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .test-button:hover {
+      background-color: #45a049;
+    }
+    #shellOutput {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Shell脚本执行测试</h1>
+    
+    <div>
+      <h2>测试脚本1 (Linux风格)</h2>
+      <pre id="script1">#!/bin/bash
+
+# 这是一个测试shell脚本
+echo "Hello from shell script!"
+echo "Current date: $(date)"
+
+# 列出当前目录内容
+echo "\nListing current directory:"
+ls -la
+
+# 显示一些系统信息
+echo "\nSystem information:"
+echo "OS: $(uname -s)"
+echo "Hostname: $(hostname)"
+
+# 退出状态
+exit 0</pre>
+      <button class="test-button" onclick="executeScript('script1')">执行脚本1</button>
+    </div>
+    
+    <div>
+      <h2>测试脚本2 (Windows风格)</h2>
+      <pre id="script2"># 简单的Windows命令测试
+echo "Hello from Windows shell!"
+echo "Current directory:"
+dir
+echo "Current date:"
+date /t
+echo "Current time:"
+time /t</pre>
+      <button class="test-button" onclick="executeScript('script2')">执行脚本2</button>
+    </div>
+    
+    <div>
+      <h2>执行结果</h2>
+      <div id="shellOutput">执行结果将显示在这里...</div>
+    </div>
+  </div>
+
+  <script>
+    async function executeScript(scriptId) {
+      const scriptContent = document.getElementById(scriptId).textContent;
+      const outputElement = document.getElementById('shellOutput');
+      
+      outputElement.textContent = '正在执行脚本...';
+      
+      try {
+        const response = await fetch('http://localhost:3001/api/execute-shell', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ script: scriptContent })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          outputElement.textContent = `执行成功！\n\n开始时间: ${result.startTime}\n结束时间: ${result.endTime}\n\n标准输出:\n${result.stdout}\n\n标准错误:\n${result.stderr || '(无)'}`;
+        } else {
+          outputElement.textContent = `执行失败: ${result.error}\n\n${result.stderr || ''}`;
+        }
+      } catch (error) {
+        outputElement.textContent = `请求错误: ${error.message}`;
+      }
+    }
+  </script>
+</body>
+</html>

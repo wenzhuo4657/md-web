@@ -1,0 +1,73 @@
+<!doctype html>
+<html class="no-js" lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>日程记录</title>
+  <meta name="description" content="一个简单而强大的在线日程记录工具，支持实时预览">
+  
+  <!-- 样式文件 -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- Marked.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="js/shell.js"></script>
+  
+  <meta property="og:title" content="日程记录">
+  <meta property="og:type" content="website">
+  <meta property="og:description" content="一个简单而强大的在线日程记录工具">
+  
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.png">
+  
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#fafafa">
+</head>
+
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>日程记录</h1>
+      <div class="toolbar">
+        <button id="toggle-btn" class="btn btn-primary">编辑</button>
+        <div class="shell-controls">
+          <input type="file" id="shell-file-input" accept=".sh,.bat,.cmd" style="display: none;">
+          <button id="select-shell-btn" class="btn btn-secondary">选择脚本</button>
+          <button id="shell-btn" class="btn btn-info" disabled>执行Shell</button>
+          <span id="selected-file-name" class="selected-file"></span>
+        </div>
+        <button id="export-btn" class="btn btn-success">导出</button>
+        <input type="file" id="import-input" accept=".md,.txt" style="display: none;">
+        <button id="import-btn" class="btn btn-warning">导入</button>
+      </div>
+    </header>
+    
+    <main class="content-container">
+      <div class="content-section">
+        <textarea id="markdown-editor" placeholder="在这里输入日程记录内容..." style="display: none;"></textarea>
+        <div id="markdown-preview" class="preview-content"></div>
+        <div id="shell-output" class="shell-output" style="display: none;">
+          <div class="shell-header">
+            <span>Shell 输出</span>
+            <div class="shell-actions">
+              <button id="save-shell" class="save-btn">保存</button>
+              <button id="close-shell" class="close-btn">×</button>
+            </div>
+          </div>
+          <pre id="shell-result"></pre>
+        </div>
+      </div>
+    </main>
+    
+    <footer class="footer">
+      <p>一个简单而强大的日程记录工具，支持实时预览和文件导入导出</p>
+    </footer>
+  </div>
+  
+  <!-- JavaScript -->
+  <script src="js/app.js"></script>
+</body>
+
+</html>
