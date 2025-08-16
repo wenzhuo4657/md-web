@@ -12,8 +12,9 @@ module.exports = merge(common, {
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false
+        changeOrigin: false,
+        secure: false,
+        logLevel: 'debug'
       }
     }
   },
