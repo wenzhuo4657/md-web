@@ -6,26 +6,31 @@ class ShellModule {
   constructor() {
     this.shellOutput = document.getElementById('shell-output');
     this.shellResult = document.getElementById('shell-result');
+    this.shellEditor = document.getElementById('shell-script-editor');
     this.apiBaseUrl = 'http://localhost:3001/api';
-    this.selectedFile = null;
+    this.scriptStorageKey = 'shell-script-content';
     this.init();
   }
 
   init() {
-    // 选择脚本文件按钮
-    document.getElementById('select-shell-btn').addEventListener('click', () => {
-      document.getElementById('shell-file-input').click();
-    });
-
-    // 文件选择器变化事件
-    document.getElementById('shell-file-input').addEventListener('change', (e) => {
-      this.handleFileSelection(e);
-    });
-
+    // 加载保存的脚本内容
+    this.loadShellScript();
+    
+    // 保存脚本事件
+    const saveScriptBtn = document.getElementById('save-shell-script-btn');
+    if (saveScriptBtn) {
+      saveScriptBtn.addEventListener('click', () => {
+        this.saveShellScript();
+      });
+    }
+    
     // Shell执行按钮
-    document.getElementById('shell-btn').addEventListener('click', () => {
-      this.executeSelectedShellFile();
-    });
+    const executeShellBtn = document.getElementById('execute-shell-btn');
+    if (executeShellBtn) {
+      executeShellBtn.addEventListener('click', () => {
+        this.executeShellScript();
+      });
+    }
 
     // 关闭Shell输出
     document.getElementById('close-shell').addEventListener('click', () => {
@@ -38,48 +43,54 @@ class ShellModule {
     });
   }
 
-  // 处理文件选择
-  handleFileSelection(event) {
-    const file = event.target.files[0];
-    if (!file) {
-      return;
+  // 加载脚本内容
+  loadShellScript() {
+    // 从localStorage加载保存的脚本内容
+    const savedScript = localStorage.getItem(this.scriptStorageKey);
+    if (savedScript && this.shellEditor) {
+      this.shellEditor.value = savedScript;
+    } else if (this.shellEditor && !this.shellEditor.value.trim()) {
+      // 如果没有保存的内容，显示默认示例
+      this.shellEditor.value = '#!/bin/bash\n\n# 在此编写您的shell脚本\necho "Hello World"\necho "当前时间: $(date)"\necho "当前目录: $(pwd)"';
     }
-
-    // 检查文件扩展名
-    const validExtensions = ['.sh', '.bat', '.cmd'];
-    const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+  }
+  
+  // 保存脚本内容
+  saveShellScript() {
+    if (!this.shellEditor) return;
     
-    if (!validExtensions.includes(fileExtension)) {
-      this.showNotification('请选择有效的脚本文件 (.sh, .bat, .cmd)', 'warning');
-      return;
-    }
-
-    this.selectedFile = file;
+    const scriptContent = this.shellEditor.value;
     
-    // 更新UI显示选中的文件名
-    document.getElementById('selected-file-name').textContent = file.name;
+    // 保存到localStorage
+    localStorage.setItem(this.scriptStorageKey, scriptContent);
     
-    // 启用执行按钮
-    document.getElementById('shell-btn').disabled = false;
+    // 同时保存到服务器
+    this.saveScriptToServer(scriptContent);
     
-    this.showNotification(`已选择脚本文件: ${file.name}`, 'success');
+    this.showNotification('脚本已保存', 'success');
   }
 
-  // 执行选中的Shell文件
-  async executeSelectedShellFile() {
-    if (!this.selectedFile) {
-      this.showNotification('请先选择一个脚本文件', 'warning');
+  // 执行Shell脚本
+  async executeShellScript() {
+    if (!this.shellEditor) {
+      this.showNotification('脚本编辑器未找到', 'error');
+      return;
+    }
+    
+    const scriptContent = this.shellEditor.value.trim();
+    if (!scriptContent) {
+      this.showNotification('请输入脚本内容', 'error');
       return;
     }
 
     try {
-      // 读取文件内容
-      const fileContent = await this.readFileContent(this.selectedFile);
+      // 先保存脚本到服务器
+      await this.saveScriptToServer(scriptContent);
       
       // 显示正在执行的提示
-      this.showShellOutput(`正在执行脚本文件: ${this.selectedFile.name}\n`);
+      this.showShellOutput('正在执行脚本...\n');
       
-      const result = await this.executeShellScript(fileContent);
+      const result = await this.executeSourceCommand();
       this.displayExecutionResult(result);
      } catch (error) {
        this.showShellOutput(`执行错误: ${error.message}\n`);
@@ -87,14 +98,27 @@ class ShellModule {
      }
   }
 
-  // 读取文件内容
-  readFileContent(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
-      reader.onerror = (e) => reject(new Error('文件读取失败'));
-      reader.readAsText(file);
-    });
+  // 保存脚本到服务器
+  async saveScriptToServer(scriptContent) {
+    try {
+      const response = await fetch(`${this.apiBaseUrl}/save-shell-script`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: scriptContent })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      return result;
+    } catch (error) {
+      console.error('保存脚本到服务器失败:', error);
+      throw error;
+    }
   }
 
   // 提取shell脚本内容
@@ -115,14 +139,14 @@ class ShellModule {
     return null;
   }
   
-  // 执行shell脚本
-  async executeShellScript(shellScript) {
+  // 执行source命令
+  async executeSourceCommand() {
     const response = await fetch(`${this.apiBaseUrl}/execute-shell`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'text/plain'
+        'Content-Type': 'application/json'
       },
-      body: shellScript
+      body: JSON.stringify({ script: 'source shell.sh' })
     });
     
     if (!response.ok) {

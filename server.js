@@ -12,7 +12,32 @@ app.use(cors());
 app.use(express.json());
 app.use(express.text());
 
-// 执行shell.sh文件的API端点
+// 保存shell脚本的API端点
+app.post('/api/save-shell-script', (req, res) => {
+  try {
+    const { content } = req.body;
+    
+    if (!content) {
+      return res.status(400).json({ error: '脚本内容不能为空' });
+    }
+    
+    // 将脚本内容保存到shell.sh文件
+    const scriptPath = path.join(__dirname, 'shell.sh');
+    fs.writeFileSync(scriptPath, content, 'utf8');
+    
+    console.log('Shell脚本已保存到:', scriptPath);
+    res.json({ 
+      success: true, 
+      message: '脚本保存成功',
+      path: scriptPath
+    });
+  } catch (error) {
+    console.error('保存shell脚本失败:', error);
+    res.status(500).json({ error: '保存脚本失败: ' + error.message });
+  }
+});
+
+// 执行shell脚本的API端点
 app.post('/api/execute-shell', (req, res) => {
   try {
     const shellContent = req.body;
