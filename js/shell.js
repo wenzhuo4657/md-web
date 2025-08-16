@@ -6,41 +6,93 @@ class ShellModule {
   constructor() {
     this.shellOutput = document.getElementById('shell-output');
     this.shellResult = document.getElementById('shell-result');
-    this.shellEditor = document.getElementById('shell-script-editor');
-    this.apiBaseUrl = 'http://localhost:3001/api';
+    this.shellEditor = null; // 延迟初始化
+    this.shellModal = document.getElementById('shell-modal');
+    this.apiBaseUrl = '/api';
     this.scriptStorageKey = 'shell-script-content';
     this.init();
   }
 
   init() {
-    // 加载保存的脚本内容
-    this.loadShellScript();
+    // 打开弹窗按钮
+    const openModalBtn = document.getElementById('open-shell-modal-btn');
+    if (openModalBtn) {
+      openModalBtn.addEventListener('click', () => {
+        this.openModal();
+      });
+    }
     
+    // 关闭弹窗按钮
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        this.closeModal();
+      });
+    }
+    
+    // 点击弹窗背景关闭
+    if (this.shellModal) {
+      this.shellModal.addEventListener('click', (e) => {
+        if (e.target === this.shellModal) {
+          this.closeModal();
+        }
+      });
+    }
+
+    // 关闭Shell输出
+    const closeShellBtn = document.getElementById('close-shell');
+    if (closeShellBtn) {
+      closeShellBtn.addEventListener('click', () => {
+        this.hideShellOutput();
+      });
+    }
+    
+    // 保存Shell输出
+    const saveShellBtn = document.getElementById('save-shell');
+    if (saveShellBtn) {
+      saveShellBtn.addEventListener('click', () => {
+        this.saveShellOutput();
+      });
+    }
+  }
+
+  // 打开弹窗
+  openModal() {
+    if (this.shellModal) {
+      this.shellModal.style.display = 'flex';
+      // 初始化编辑器引用
+      this.shellEditor = document.getElementById('shell-script-editor');
+      // 加载脚本内容
+      this.loadShellScript();
+      // 初始化弹窗内部事件
+      this.initModalEvents();
+    }
+  }
+  
+  // 关闭弹窗
+  closeModal() {
+    if (this.shellModal) {
+      this.shellModal.style.display = 'none';
+    }
+  }
+  
+  // 初始化弹窗内部事件
+  initModalEvents() {
     // 保存脚本事件
     const saveScriptBtn = document.getElementById('save-shell-script-btn');
     if (saveScriptBtn) {
-      saveScriptBtn.addEventListener('click', () => {
-        this.saveShellScript();
-      });
+      saveScriptBtn.removeEventListener('click', this.saveHandler);
+      this.saveHandler = () => this.saveShellScript();
+      saveScriptBtn.addEventListener('click', this.saveHandler);
     }
     
     // Shell执行按钮
     const executeShellBtn = document.getElementById('execute-shell-btn');
     if (executeShellBtn) {
-      executeShellBtn.addEventListener('click', () => {
-        this.executeShellScript();
-      });
+      executeShellBtn.removeEventListener('click', this.executeHandler);
+      this.executeHandler = () => this.executeShellScript();
+      executeShellBtn.addEventListener('click', this.executeHandler);
     }
-
-    // 关闭Shell输出
-    document.getElementById('close-shell').addEventListener('click', () => {
-      this.hideShellOutput();
-    });
-    
-    // 保存Shell输出
-    document.getElementById('save-shell').addEventListener('click', () => {
-      this.saveShellOutput();
-    });
   }
 
   // 加载脚本内容

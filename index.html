@@ -33,10 +33,7 @@
       <div class="toolbar">
         <button id="toggle-btn" class="btn btn-primary">编辑</button>
         <div class="shell-controls">
-          <button id="save-shell-script-btn" class="btn btn-success">保存脚本</button>
-          <button id="execute-shell-btn" class="btn btn-primary">执行Shell</button>
-          <button id="save-shell-btn" class="btn btn-success">保存结果</button>
-          <button id="close-shell-btn" class="btn btn-danger">关闭输出</button>
+          <button id="open-shell-modal-btn" class="btn btn-primary">Shell脚本编辑器</button>
         </div>
         <button id="export-btn" class="btn btn-success">导出</button>
         <input type="file" id="import-input" accept=".md,.txt" style="display: none;">
@@ -48,13 +45,7 @@
       <div class="content-section">
         <textarea id="markdown-editor" placeholder="在这里输入日程记录内容..." style="display: none;"></textarea>
         <div id="markdown-preview" class="preview-content"></div>
-        <!-- Shell 脚本编辑执行区域 -->
-        <div class="shell-section">
-          <h3>Shell 脚本编辑器</h3>
-          <div class="shell-editor-container">
-            <textarea id="shell-script-editor" class="shell-editor" placeholder="在此编辑您的shell脚本内容...\n例如：\necho 'Hello World'\nls -la\npwd"></textarea>
-          </div>
-        </div>
+
         <div id="shell-output" class="shell-output" style="display: none;">
           <div class="shell-header">
             <span>Shell 输出</span>
@@ -67,6 +58,27 @@
         </div>
       </div>
     </main>
+    
+    <!-- Shell脚本编辑器弹窗 -->
+    <div id="shell-modal" class="modal" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Shell脚本编辑器</h3>
+          <button id="close-modal-btn" class="close-btn">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="shell-editor-container">
+            <textarea id="shell-script-editor" class="shell-editor" placeholder="在此编辑您的shell脚本内容...\n例如：\necho 'Hello World'\nls -la\npwd"></textarea>
+          </div>
+          <div class="modal-actions">
+            <button id="save-shell-script-btn" class="btn btn-success">保存脚本</button>
+            <button id="execute-shell-btn" class="btn btn-primary">执行Shell</button>
+            <button id="save-shell-btn" class="btn btn-success">保存结果</button>
+            <button id="close-shell-btn" class="btn btn-danger">关闭输出</button>
+          </div>
+        </div>
+      </div>
+    </div>
     
     <footer class="footer">
       <p>一个简单而强大的日程记录工具，支持实时预览和文件导入导出</p>
