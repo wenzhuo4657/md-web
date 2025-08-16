@@ -128,13 +128,121 @@ class MarkdownEditor {
     const markdownText = this.editor.value;
     
     try {
-      // 使用marked库解析Markdown
-      const htmlContent = marked.parse(markdownText);
-      this.preview.innerHTML = htmlContent;
+      // 检查是否包含日期格式的标题
+      if (this.hasDateHeaders(markdownText)) {
+        this.renderDateTabs(markdownText);
+      } else {
+        // 使用marked库解析Markdown
+        const htmlContent = marked.parse(markdownText);
+        this.preview.innerHTML = htmlContent;
+      }
     } catch (error) {
       console.error('Markdown解析错误:', error);
       this.preview.innerHTML = '<p style="color: red;">Markdown解析出错，请检查语法。</p>';
     }
+  }
+
+  // 检查是否包含任何#号标题
+  hasDateHeaders(text) {
+    const headerRegex = /^#\s+/gm;
+    return headerRegex.test(text);
+  }
+
+  // 渲染日期标签页
+  renderDateTabs(markdownText) {
+    const sections = this.parseDateSections(markdownText);
+    
+    if (sections.length === 0) {
+      const htmlContent = marked.parse(markdownText);
+      this.preview.innerHTML = htmlContent;
+      return;
+    }
+
+    // 创建标签页结构
+    let tabsHtml = '<div class="date-tabs-container">';
+    
+    // 创建标签导航
+    tabsHtml += '<div class="date-tabs-nav">';
+    sections.forEach((section, index) => {
+      const activeClass = index === 0 ? ' active' : '';
+      tabsHtml += `<button class="date-tab-btn${activeClass}" data-tab="${index}">${section.date}</button>`;
+    });
+    tabsHtml += '</div>';
+    
+    // 创建标签内容
+    tabsHtml += '<div class="date-tabs-content">';
+    sections.forEach((section, index) => {
+      const activeClass = index === 0 ? ' active' : '';
+      const contentHtml = marked.parse(section.content);
+      tabsHtml += `<div class="date-tab-panel${activeClass}" data-panel="${index}">${contentHtml}</div>`;
+    });
+    tabsHtml += '</div>';
+    
+    tabsHtml += '</div>';
+    
+    this.preview.innerHTML = tabsHtml;
+    
+    // 绑定标签切换事件
+    this.bindTabEvents();
+  }
+
+  // 解析标题分组
+  parseDateSections(text) {
+    const sections = [];
+    const lines = text.split('\n');
+    let currentSection = null;
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const headerMatch = line.match(/^# (.+)$/);
+      
+      if (headerMatch) {
+        // 如果当前有未完成的section，先保存它
+        if (currentSection) {
+          sections.push(currentSection);
+        }
+        
+        // 开始新的section
+        currentSection = {
+          date: headerMatch[1].trim(),
+          content: '',
+          startLine: i
+        };
+      } else if (currentSection) {
+        // 添加内容到当前section
+        currentSection.content += line + '\n';
+      }
+    }
+    
+    // 保存最后一个section
+    if (currentSection) {
+      sections.push(currentSection);
+    }
+    
+    return sections;
+  }
+
+  // 绑定标签切换事件
+  bindTabEvents() {
+    const tabBtns = this.preview.querySelectorAll('.date-tab-btn');
+    const tabPanels = this.preview.querySelectorAll('.date-tab-panel');
+    
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tabIndex = btn.getAttribute('data-tab');
+        
+        // 移除所有活动状态
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabPanels.forEach(p => p.classList.remove('active'));
+        
+        // 激活当前标签
+        btn.classList.add('active');
+        const targetPanel = this.preview.querySelector(`[data-panel="${tabIndex}"]`);
+        if (targetPanel) {
+          targetPanel.classList.add('active');
+        }
+      });
+    });
   }
 
   // 保存到本地存储
